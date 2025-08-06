@@ -8,7 +8,14 @@
       "Bash(git init:*)",
       "Bash(mkdir:*)",
       "Bash(chmod:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(cp:*)",
+      "mcp__xcode-build__scaffold_ios_project",
+      "mcp__xcode-build__build_sim_name_ws",
+      "Bash(grep:*)",
+      "mcp__xcode-build__build_sim_id_ws",
+      "Bash(xcodebuild:*)"
     ],
     "deny": []
   },
