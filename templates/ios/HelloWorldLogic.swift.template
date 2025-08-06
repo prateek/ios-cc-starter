@@ -1,0 +1,61 @@
+// ABOUTME: Business logic for Hello World functionality
+// ABOUTME: Provides testable counter operations and app info
+
+import Foundation
+
+public class HelloWorldLogic {
+    private(set) var counter: Int = 0
+    private let maxCount = 999
+    
+    public init() {}
+    
+    public func increment() -> Int {
+        if counter < maxCount {
+            counter += 1
+        }
+        return counter
+    }
+    
+    public func decrement() -> Int {
+        if counter > 0 {
+            counter -= 1
+        }
+        return counter
+    }
+    
+    public func reset() {
+        counter = 0
+    }
+    
+    public func getGreeting(for platform: String) -> String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let timeGreeting: String
+        
+        switch hour {
+        case 0..<12:
+            timeGreeting = "Good morning"
+        case 12..<17:
+            timeGreeting = "Good afternoon"
+        default:
+            timeGreeting = "Good evening"
+        }
+        
+        return "\(timeGreeting) from \(platform)!"
+    }
+    
+    public func getDeviceInfo() -> String {
+        #if os(iOS)
+        let device = UIDevice.current
+        return "\(device.model) - iOS \(device.systemVersion)"
+        #elseif os(macOS)
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+        return "macOS \(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"
+        #else
+        return "Unknown Platform"
+        #endif
+    }
+    
+    public func isCountAtLimit() -> Bool {
+        return counter >= maxCount
+    }
+}

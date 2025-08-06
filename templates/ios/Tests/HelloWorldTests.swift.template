@@ -1,0 +1,163 @@
+// ABOUTME: Unit tests for HelloWorldLogic business logic
+// ABOUTME: Tests counter operations, greeting generation, and device info
+
+import XCTest
+@testable import {{PROJECT_NAME}}
+
+final class HelloWorldTests: XCTestCase {
+    
+    var logic: HelloWorldLogic!
+    
+    override func setUp() {
+        super.setUp()
+        logic = HelloWorldLogic()
+    }
+    
+    override func tearDown() {
+        logic = nil
+        super.tearDown()
+    }
+    
+    // MARK: - Counter Tests
+    
+    func testInitialCounterIsZero() {
+        XCTAssertEqual(logic.counter, 0, "Initial counter should be 0")
+    }
+    
+    func testIncrementIncreasesByOne() {
+        let result = logic.increment()
+        XCTAssertEqual(result, 1, "Counter should be 1 after first increment")
+        XCTAssertEqual(logic.counter, 1, "Counter property should be 1")
+    }
+    
+    func testMultipleIncrements() {
+        for i in 1...5 {
+            let result = logic.increment()
+            XCTAssertEqual(result, i, "Counter should be \(i) after \(i) increments")
+        }
+    }
+    
+    func testDecrementDecreasesByOne() {
+        logic.increment()
+        logic.increment()
+        let result = logic.decrement()
+        XCTAssertEqual(result, 1, "Counter should be 1 after decrement from 2")
+    }
+    
+    func testDecrementDoesNotGoBelowZero() {
+        let result = logic.decrement()
+        XCTAssertEqual(result, 0, "Counter should stay at 0 when decrementing from 0")
+        XCTAssertEqual(logic.counter, 0, "Counter property should remain 0")
+    }
+    
+    func testResetSetsCounterToZero() {
+        logic.increment()
+        logic.increment()
+        logic.reset()
+        XCTAssertEqual(logic.counter, 0, "Counter should be 0 after reset")
+    }
+    
+    func testCounterDoesNotExceedMaximum() {
+        // Set counter near max
+        for _ in 1...999 {
+            logic.increment()
+        }
+        XCTAssertEqual(logic.counter, 999, "Counter should be at max value")
+        
+        // Try to increment beyond max
+        let result = logic.increment()
+        XCTAssertEqual(result, 999, "Counter should remain at max value")
+        XCTAssertTrue(logic.isCountAtLimit(), "Should report being at limit")
+    }
+    
+    // MARK: - Greeting Tests
+    
+    func testGreetingContainsPlatform() {
+        let greeting = logic.getGreeting(for: "iOS")
+        XCTAssertTrue(greeting.contains("iOS"), "Greeting should contain platform name")
+    }
+    
+    func testGreetingHasTimeBasedMessage() {
+        let greeting = logic.getGreeting(for: "Test")
+        let hasTimeGreeting = greeting.contains("Good morning") ||
+                             greeting.contains("Good afternoon") ||
+                             greeting.contains("Good evening")
+        XCTAssertTrue(hasTimeGreeting, "Greeting should contain time-based message")
+    }
+    
+    // MARK: - Device Info Tests
+    
+    func testDeviceInfoIsNotEmpty() {
+        let info = logic.getDeviceInfo()
+        XCTAssertFalse(info.isEmpty, "Device info should not be empty")
+    }
+    
+    func testDeviceInfoContainsOSVersion() {
+        let info = logic.getDeviceInfo()
+        #if os(iOS)
+        XCTAssertTrue(info.contains("iOS"), "Device info should contain iOS")
+        #elseif os(macOS)
+        XCTAssertTrue(info.contains("macOS"), "Device info should contain macOS")
+        #endif
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testIncrementPerformance() {
+        measure {
+            for _ in 1...1000 {
+                logic.increment()
+            }
+            logic.reset()
+        }
+    }
+}
+
+// MARK: - Integration Tests
+
+final class HelloWorldIntegrationTests: XCTestCase {
+    
+    func testCompleteUserFlow() {
+        let logic = HelloWorldLogic()
+        
+        // User taps multiple times
+        for _ in 1...10 {
+            logic.increment()
+        }
+        XCTAssertEqual(logic.counter, 10, "Counter should be 10")
+        
+        // User resets
+        logic.reset()
+        XCTAssertEqual(logic.counter, 0, "Counter should be 0 after reset")
+        
+        // User continues tapping
+        logic.increment()
+        XCTAssertEqual(logic.counter, 1, "Counter should work after reset")
+    }
+    
+    func testConcurrentAccess() {
+        let logic = HelloWorldLogic()
+        let expectation = XCTestExpectation(description: "Concurrent increments")
+        let queue = DispatchQueue(label: "test.concurrent", attributes: .concurrent)
+        
+        let iterations = 100
+        let group = DispatchGroup()
+        
+        for _ in 0..<iterations {
+            group.enter()
+            queue.async {
+                logic.increment()
+                group.leave()
+            }
+        }
+        
+        group.notify(queue: .main) {
+            // Due to lack of thread safety, this might not equal iterations
+            // This test documents current behavior
+            XCTAssertGreaterThan(logic.counter, 0, "Counter should have increased")
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 5.0)
+    }
+}

@@ -1,0 +1,208 @@
+// ABOUTME: UI tests for iOS app interface
+// ABOUTME: Tests UI elements, interactions, and navigation
+
+import XCTest
+
+final class HelloWorldUITests: XCTestCase {
+    
+    var app: XCUIApplication!
+    
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launch()
+    }
+    
+    override func tearDown() {
+        app = nil
+        super.tearDown()
+    }
+    
+    // MARK: - UI Element Existence Tests
+    
+    func testMainUIElementsExist() {
+        // Check Hello World text
+        let helloWorldText = app.staticTexts["helloWorldText"]
+        XCTAssertTrue(helloWorldText.exists, "Hello World text should exist")
+        XCTAssertEqual(helloWorldText.label, "Hello, World!")
+        
+        // Check tap button
+        let tapButton = app.buttons["tapButton"]
+        XCTAssertTrue(tapButton.exists, "Tap button should exist")
+        
+        // Check reset button
+        let resetButton = app.buttons["resetButton"]
+        XCTAssertTrue(resetButton.exists, "Reset button should exist")
+        
+        // Check counter label
+        let counterLabel = app.staticTexts["tapCountLabel"]
+        XCTAssertTrue(counterLabel.exists, "Counter label should exist")
+        XCTAssertEqual(counterLabel.label, "Tap count: 0")
+        
+        // Check about button
+        let aboutButton = app.buttons["aboutButton"]
+        XCTAssertTrue(aboutButton.exists, "About button should exist")
+    }
+    
+    // MARK: - Interaction Tests
+    
+    func testTapButtonIncrementsCounter() {
+        let tapButton = app.buttons["tapButton"]
+        let counterLabel = app.staticTexts["tapCountLabel"]
+        
+        // Initial state
+        XCTAssertEqual(counterLabel.label, "Tap count: 0")
+        
+        // Tap once
+        tapButton.tap()
+        XCTAssertEqual(counterLabel.label, "Tap count: 1")
+        
+        // Tap multiple times
+        for i in 2...5 {
+            tapButton.tap()
+            XCTAssertEqual(counterLabel.label, "Tap count: \(i)")
+        }
+    }
+    
+    func testResetButtonResetsCounter() {
+        let tapButton = app.buttons["tapButton"]
+        let resetButton = app.buttons["resetButton"]
+        let counterLabel = app.staticTexts["tapCountLabel"]
+        
+        // Increment counter
+        tapButton.tap()
+        tapButton.tap()
+        tapButton.tap()
+        XCTAssertEqual(counterLabel.label, "Tap count: 3")
+        
+        // Reset
+        resetButton.tap()
+        XCTAssertEqual(counterLabel.label, "Tap count: 0")
+        
+        // Verify can increment again
+        tapButton.tap()
+        XCTAssertEqual(counterLabel.label, "Tap count: 1")
+    }
+    
+    func testAboutButtonShowsAlert() {
+        let aboutButton = app.buttons["aboutButton"]
+        aboutButton.tap()
+        
+        // Check alert appears
+        let alert = app.alerts["{{PROJECT_NAME}}"]
+        XCTAssertTrue(alert.exists, "About alert should appear")
+        
+        // Check alert content
+        let alertMessage = alert.staticTexts["A Hello World app built with Claude Code\nVersion 1.0"]
+        XCTAssertTrue(alertMessage.exists, "Alert should contain correct message")
+        
+        // Dismiss alert
+        alert.buttons["OK"].tap()
+        XCTAssertFalse(alert.exists, "Alert should be dismissed")
+    }
+    
+    // MARK: - Navigation Tests
+    
+    func testNavigationBarExists() {
+        let navBar = app.navigationBars["{{PROJECT_NAME}}"]
+        XCTAssertTrue(navBar.exists, "Navigation bar should exist")
+    }
+    
+    // MARK: - Accessibility Tests
+    
+    func testAccessibilityIdentifiers() {
+        // Verify all important elements have accessibility identifiers
+        XCTAssertTrue(app.staticTexts["helloWorldText"].exists)
+        XCTAssertTrue(app.staticTexts["tapCountLabel"].exists)
+        XCTAssertTrue(app.buttons["tapButton"].exists)
+        XCTAssertTrue(app.buttons["resetButton"].exists)
+        XCTAssertTrue(app.buttons["aboutButton"].exists)
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testRapidTapping() {
+        let tapButton = app.buttons["tapButton"]
+        let counterLabel = app.staticTexts["tapCountLabel"]
+        
+        measure {
+            // Rapidly tap 20 times
+            for _ in 1...20 {
+                tapButton.tap()
+            }
+            
+            // Verify final count
+            XCTAssertTrue(counterLabel.label.contains("20"))
+            
+            // Reset for next iteration
+            app.buttons["resetButton"].tap()
+        }
+    }
+    
+    // MARK: - Device Rotation Tests (iPad)
+    
+    func testUIInLandscapeMode() {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            XCTSkip("This test is only for iPad")
+            return
+        }
+        
+        // Rotate to landscape
+        XCUIDevice.shared.orientation = .landscapeLeft
+        
+        // Verify UI elements still exist and function
+        let tapButton = app.buttons["tapButton"]
+        XCTAssertTrue(tapButton.exists)
+        tapButton.tap()
+        
+        let counterLabel = app.staticTexts["tapCountLabel"]
+        XCTAssertEqual(counterLabel.label, "Tap count: 1")
+        
+        // Rotate back to portrait
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertTrue(tapButton.exists)
+        XCTAssertEqual(counterLabel.label, "Tap count: 1")
+    }
+    
+    // MARK: - Screenshot Tests
+    
+    func testTakeScreenshots() {
+        // Initial state
+        let screenshot1 = app.screenshot()
+        let attachment1 = XCTAttachment(screenshot: screenshot1)
+        attachment1.name = "Initial State"
+        attachment1.lifetime = .keepAlways
+        add(attachment1)
+        
+        // After tapping
+        app.buttons["tapButton"].tap()
+        app.buttons["tapButton"].tap()
+        
+        let screenshot2 = app.screenshot()
+        let attachment2 = XCTAttachment(screenshot: screenshot2)
+        attachment2.name = "After Tapping"
+        attachment2.lifetime = .keepAlways
+        add(attachment2)
+        
+        // About alert
+        app.buttons["aboutButton"].tap()
+        
+        let screenshot3 = app.screenshot()
+        let attachment3 = XCTAttachment(screenshot: screenshot3)
+        attachment3.name = "About Alert"
+        attachment3.lifetime = .keepAlways
+        add(attachment3)
+    }
+}
+
+// MARK: - Launch Performance Tests
+
+final class HelloWorldLaunchTests: XCTestCase {
+    
+    func testLaunchPerformance() {
+        measure(metrics: [XCTApplicationLaunchMetric()]) {
+            XCUIApplication().launch()
+        }
+    }
+}

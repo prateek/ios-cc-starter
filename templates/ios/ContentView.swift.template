@@ -1,0 +1,83 @@
+// ABOUTME: Main content view for iOS app
+// ABOUTME: Displays Hello World with interactive counter
+
+import SwiftUI
+
+struct ContentView: View {
+    @State private var tapCount = 0
+    @State private var showingAlert = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Hello, World!")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .accessibilityIdentifier("helloWorldText")
+                
+                Text("Running on {{DEVICE_TYPE}}")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Divider()
+                    .padding(.horizontal, 40)
+                
+                VStack(spacing: 10) {
+                    Text("Tap count: \(tapCount)")
+                        .font(.title2)
+                        .accessibilityIdentifier("tapCountLabel")
+                    
+                    HStack(spacing: 20) {
+                        Button(action: {
+                            tapCount += 1
+                        }) {
+                            Label("Tap me!", systemImage: "hand.tap")
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        .accessibilityIdentifier("tapButton")
+                        
+                        Button(action: {
+                            tapCount = 0
+                        }) {
+                            Label("Reset", systemImage: "arrow.counterclockwise")
+                                .padding()
+                                .background(Color.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        .accessibilityIdentifier("resetButton")
+                    }
+                }
+                
+                Spacer()
+                
+                Button(action: {
+                    showingAlert = true
+                }) {
+                    Text("About This App")
+                        .font(.footnote)
+                        .foregroundColor(.blue)
+                }
+                .accessibilityIdentifier("aboutButton")
+                .alert("{{PROJECT_NAME}}", isPresented: $showingAlert) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text("A Hello World app built with Claude Code\nVersion 1.0")
+                }
+            }
+            .padding()
+            .navigationTitle("{{PROJECT_NAME}}")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}

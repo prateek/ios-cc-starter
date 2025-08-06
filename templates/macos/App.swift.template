@@ -1,0 +1,105 @@
+// ABOUTME: Main app entry point for SwiftUI macOS application
+// ABOUTME: Configures app lifecycle, menu bar, and window management
+
+import SwiftUI
+
+@main
+struct {{PROJECT_NAME}}App: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+        .windowStyle(.automatic)
+        .windowToolbarStyle(.automatic)
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About {{PROJECT_NAME}}") {
+                    appDelegate.showAboutPanel()
+                }
+            }
+            
+            CommandMenu("Tools") {
+                Button("Clear Counter") {
+                    NotificationCenter.default.post(name: .clearCounter, object: nil)
+                }
+                .keyboardShortcut("k", modifiers: [.command, .shift])
+                
+                Divider()
+                
+                Button("System Information") {
+                    NotificationCenter.default.post(name: .showSystemInfo, object: nil)
+                }
+                .keyboardShortcut("i", modifiers: .command)
+            }
+        }
+        
+        Settings {
+            SettingsView()
+        }
+    }
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // App launch setup
+    }
+    
+    func showAboutPanel() {
+        let aboutView = AboutWindowView()
+        let hostingController = NSHostingController(rootView: aboutView)
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "About {{PROJECT_NAME}}"
+        window.styleMask = [.titled, .closable]
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+    }
+}
+
+struct AboutWindowView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "app.badge")
+                .font(.system(size: 60))
+                .foregroundColor(.blue)
+            
+            Text("{{PROJECT_NAME}}")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            
+            Text("Version 1.0")
+                .font(.title3)
+                .foregroundColor(.secondary)
+            
+            Text("A Hello World app built with Claude Code")
+                .font(.body)
+        }
+        .padding(40)
+        .frame(width: 350, height: 300)
+    }
+}
+
+struct SettingsView: View {
+    @AppStorage("showWelcomeOnStartup") private var showWelcomeOnStartup = true
+    @AppStorage("defaultCounter") private var defaultCounter = 0
+    
+    var body: some View {
+        Form {
+            Toggle("Show welcome message on startup", isOn: $showWelcomeOnStartup)
+            
+            HStack {
+                Text("Default counter value:")
+                TextField("", value: $defaultCounter, format: .number)
+                    .frame(width: 60)
+            }
+        }
+        .padding()
+        .frame(width: 400, height: 150)
+    }
+}
+
+extension Notification.Name {
+    static let clearCounter = Notification.Name("clearCounter")
+    static let showSystemInfo = Notification.Name("showSystemInfo")
+}

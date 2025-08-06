@@ -1,0 +1,227 @@
+// ABOUTME: Unit tests for macOS app business logic
+// ABOUTME: Tests system info retrieval, notifications, and app delegate
+
+import XCTest
+@testable import {{PROJECT_NAME}}
+
+final class HelloWorldMacTests: XCTestCase {
+    
+    var logic: HelloWorldLogic!
+    
+    override func setUp() {
+        super.setUp()
+        logic = HelloWorldLogic()
+    }
+    
+    override func tearDown() {
+        logic = nil
+        super.tearDown()
+    }
+    
+    // MARK: - Counter Tests (Shared with iOS)
+    
+    func testCounterFunctionality() {
+        XCTAssertEqual(logic.counter, 0, "Initial counter should be 0")
+        
+        logic.increment()
+        XCTAssertEqual(logic.counter, 1, "Counter should be 1")
+        
+        logic.reset()
+        XCTAssertEqual(logic.counter, 0, "Counter should be 0 after reset")
+    }
+    
+    // MARK: - macOS Specific Tests
+    
+    func testSystemInfoRetrieval() {
+        let info = logic.getDeviceInfo()
+        XCTAssertTrue(info.contains("macOS"), "Should contain macOS")
+        
+        // Verify version format
+        let versionPattern = #"macOS \d+\.\d+\.\d+"#
+        let regex = try! NSRegularExpression(pattern: versionPattern)
+        let range = NSRange(location: 0, length: info.utf16.count)
+        let matches = regex.matches(in: info, range: range)
+        XCTAssertFalse(matches.isEmpty, "Should contain properly formatted macOS version")
+    }
+    
+    // MARK: - Notification Tests
+    
+    func testClearCounterNotification() {
+        let expectation = XCTestExpectation(description: "Clear counter notification")
+        
+        let observer = NotificationCenter.default.addObserver(
+            forName: .clearCounter,
+            object: nil,
+            queue: .main
+        ) { _ in
+            expectation.fulfill()
+        }
+        
+        NotificationCenter.default.post(name: .clearCounter, object: nil)
+        
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
+    
+    func testShowSystemInfoNotification() {
+        let expectation = XCTestExpectation(description: "Show system info notification")
+        
+        let observer = NotificationCenter.default.addObserver(
+            forName: .showSystemInfo,
+            object: nil,
+            queue: .main
+        ) { _ in
+            expectation.fulfill()
+        }
+        
+        NotificationCenter.default.post(name: .showSystemInfo, object: nil)
+        
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
+    
+    // MARK: - App Delegate Tests
+    
+    func testAppDelegateInitialization() {
+        let delegate = AppDelegate()
+        XCTAssertNotNil(delegate, "App delegate should initialize")
+    }
+    
+    // MARK: - User Defaults Tests
+    
+    func testUserDefaultsStorage() {
+        let defaults = UserDefaults.standard
+        
+        // Test boolean setting
+        defaults.set(false, forKey: "showWelcomeOnStartup")
+        XCTAssertFalse(defaults.bool(forKey: "showWelcomeOnStartup"))
+        
+        defaults.set(true, forKey: "showWelcomeOnStartup")
+        XCTAssertTrue(defaults.bool(forKey: "showWelcomeOnStartup"))
+        
+        // Test integer setting
+        defaults.set(42, forKey: "defaultCounter")
+        XCTAssertEqual(defaults.integer(forKey: "defaultCounter"), 42)
+        
+        // Clean up
+        defaults.removeObject(forKey: "showWelcomeOnStartup")
+        defaults.removeObject(forKey: "defaultCounter")
+    }
+    
+    // MARK: - Memory Tests
+    
+    func testMemoryInfoFormat() {
+        // Create a mock content view to test system info methods
+        let contentView = ContentView()
+        let memoryInfo = contentView.getMemoryInfo()
+        
+        // Check that memory info contains expected units
+        let hasMemoryUnit = memoryInfo.contains("GB") || 
+                           memoryInfo.contains("MB") || 
+                           memoryInfo.contains("TB")
+        XCTAssertTrue(hasMemoryUnit, "Memory info should contain size unit")
+    }
+    
+    func testProcessorInfoFormat() {
+        let contentView = ContentView()
+        let processorInfo = contentView.getProcessorInfo()
+        
+        XCTAssertFalse(processorInfo.isEmpty, "Processor info should not be empty")
+        // Most Mac processors contain "Intel" or "Apple"
+        let hasKnownProcessor = processorInfo.contains("Intel") || 
+                               processorInfo.contains("Apple") ||
+                               processorInfo.contains("M1") ||
+                               processorInfo.contains("M2") ||
+                               processorInfo.contains("M3")
+        XCTAssertTrue(hasKnownProcessor, "Should detect known processor type")
+    }
+    
+    // MARK: - Window Management Tests
+    
+    func testAboutWindowConfiguration() {
+        let aboutView = AboutWindowView()
+        let hostingController = NSHostingController(rootView: aboutView)
+        let window = NSWindow(contentViewController: hostingController)
+        
+        XCTAssertNotNil(window.contentViewController, "Window should have content view controller")
+        XCTAssertEqual(window.title, "", "Initial window title should be empty")
+        
+        window.title = "About {{PROJECT_NAME}}"
+        XCTAssertEqual(window.title, "About {{PROJECT_NAME}}", "Window title should be set correctly")
+        
+        XCTAssertTrue(window.styleMask.contains(.titled), "Window should have title bar")
+        XCTAssertTrue(window.styleMask.contains(.closable), "Window should be closable")
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testSystemInfoPerformance() {
+        let contentView = ContentView()
+        
+        measure {
+            _ = contentView.getSystemInfo()
+        }
+    }
+    
+    func testCounterPerformance() {
+        measure {
+            for _ in 1...1000 {
+                logic.increment()
+            }
+            logic.reset()
+        }
+    }
+}
+
+// MARK: - Integration Tests
+
+final class HelloWorldMacIntegrationTests: XCTestCase {
+    
+    func testCompleteUserWorkflow() {
+        let logic = HelloWorldLogic()
+        
+        // Simulate user interaction flow
+        XCTAssertEqual(logic.counter, 0)
+        
+        // User clicks multiple times
+        for i in 1...10 {
+            let result = logic.increment()
+            XCTAssertEqual(result, i)
+        }
+        
+        // User checks device info
+        let deviceInfo = logic.getDeviceInfo()
+        XCTAssertFalse(deviceInfo.isEmpty)
+        
+        // User gets greeting
+        let greeting = logic.getGreeting(for: "macOS")
+        XCTAssertTrue(greeting.contains("macOS"))
+        
+        // User resets
+        logic.reset()
+        XCTAssertEqual(logic.counter, 0)
+    }
+    
+    func testMenuCommandIntegration() {
+        // Test that menu commands would trigger appropriate actions
+        let expectation = XCTestExpectation(description: "Menu command integration")
+        
+        var notificationReceived = false
+        let observer = NotificationCenter.default.addObserver(
+            forName: .clearCounter,
+            object: nil,
+            queue: .main
+        ) { _ in
+            notificationReceived = true
+            expectation.fulfill()
+        }
+        
+        // Simulate menu command
+        NotificationCenter.default.post(name: .clearCounter, object: nil)
+        
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertTrue(notificationReceived, "Notification should be received")
+        
+        NotificationCenter.default.removeObserver(observer)
+    }
+}

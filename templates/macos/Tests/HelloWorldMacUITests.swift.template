@@ -1,0 +1,293 @@
+// ABOUTME: UI tests for macOS app interface
+// ABOUTME: Tests window behavior, menu interactions, and UI elements
+
+import XCTest
+
+final class HelloWorldMacUITests: XCTestCase {
+    
+    var app: XCUIApplication!
+    
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launch()
+    }
+    
+    override func tearDown() {
+        app = nil
+        super.tearDown()
+    }
+    
+    // MARK: - Window Tests
+    
+    func testMainWindowExists() {
+        let window = app.windows.firstMatch
+        XCTAssertTrue(window.exists, "Main window should exist")
+        XCTAssertTrue(window.isHittable, "Main window should be hittable")
+    }
+    
+    func testWindowTitle() {
+        let window = app.windows["{{PROJECT_NAME}}"]
+        XCTAssertTrue(window.exists, "Window with correct title should exist")
+    }
+    
+    // MARK: - UI Element Tests
+    
+    func testMainUIElements() {
+        // Hello World text
+        let helloText = app.staticTexts["Hello, World!"]
+        XCTAssertTrue(helloText.exists, "Hello World text should exist")
+        
+        // Platform text
+        let platformText = app.staticTexts["Running on macOS"]
+        XCTAssertTrue(platformText.exists, "Platform text should exist")
+        
+        // Counter label
+        let counterText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Tap count:'")).firstMatch
+        XCTAssertTrue(counterText.exists, "Counter label should exist")
+        
+        // Buttons
+        let tapButton = app.buttons["Tap me!"]
+        XCTAssertTrue(tapButton.exists, "Tap button should exist")
+        
+        let resetButton = app.buttons["Reset"]
+        XCTAssertTrue(resetButton.exists, "Reset button should exist")
+        
+        let systemInfoButton = app.buttons["Show System Info"]
+        XCTAssertTrue(systemInfoButton.exists, "System info button should exist")
+    }
+    
+    // MARK: - Button Interaction Tests
+    
+    func testTapButtonIncrementsCounter() {
+        let tapButton = app.buttons["Tap me!"]
+        
+        // Initial state
+        XCTAssertTrue(app.staticTexts["Tap count: 0"].exists)
+        
+        // Click button
+        tapButton.click()
+        XCTAssertTrue(app.staticTexts["Tap count: 1"].exists)
+        
+        // Click multiple times
+        for i in 2...5 {
+            tapButton.click()
+            XCTAssertTrue(app.staticTexts["Tap count: \(i)"].exists)
+        }
+    }
+    
+    func testResetButtonResetsCounter() {
+        let tapButton = app.buttons["Tap me!"]
+        let resetButton = app.buttons["Reset"]
+        
+        // Increment counter
+        tapButton.click()
+        tapButton.click()
+        tapButton.click()
+        XCTAssertTrue(app.staticTexts["Tap count: 3"].exists)
+        
+        // Reset
+        resetButton.click()
+        XCTAssertTrue(app.staticTexts["Tap count: 0"].exists)
+    }
+    
+    func testSystemInfoButton() {
+        let systemInfoButton = app.buttons["Show System Info"]
+        systemInfoButton.click()
+        
+        // Check that system info appears
+        let systemInfoText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'macOS'")).firstMatch
+        XCTAssertTrue(systemInfoText.waitForExistence(timeout: 2), "System info should appear")
+    }
+    
+    // MARK: - Menu Bar Tests
+    
+    func testMenuBarExists() {
+        let menuBar = app.menuBars
+        XCTAssertTrue(menuBar.count > 0, "Menu bar should exist")
+    }
+    
+    func testAppMenu() {
+        let appMenu = app.menuBarItems["{{PROJECT_NAME}}"]
+        XCTAssertTrue(appMenu.exists, "App menu should exist")
+        
+        appMenu.click()
+        
+        // Check for About menu item
+        let aboutMenuItem = app.menuItems["About {{PROJECT_NAME}}"]
+        XCTAssertTrue(aboutMenuItem.exists, "About menu item should exist")
+        
+        // Press Escape to close menu
+        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
+    }
+    
+    func testToolsMenu() {
+        let toolsMenu = app.menuBarItems["Tools"]
+        XCTAssertTrue(toolsMenu.exists, "Tools menu should exist")
+        
+        toolsMenu.click()
+        
+        // Check menu items
+        let clearMenuItem = app.menuItems["Clear Counter"]
+        XCTAssertTrue(clearMenuItem.exists, "Clear Counter menu item should exist")
+        
+        let systemInfoMenuItem = app.menuItems["System Information"]
+        XCTAssertTrue(systemInfoMenuItem.exists, "System Information menu item should exist")
+        
+        // Press Escape to close menu
+        app.typeKey(XCUIKeyboardKey.escape, modifierFlags: [])
+    }
+    
+    func testClearCounterMenuItem() {
+        // Increment counter
+        let tapButton = app.buttons["Tap me!"]
+        tapButton.click()
+        tapButton.click()
+        XCTAssertTrue(app.staticTexts["Tap count: 2"].exists)
+        
+        // Use menu to clear
+        app.menuBarItems["Tools"].click()
+        app.menuItems["Clear Counter"].click()
+        
+        // Counter should be cleared
+        XCTAssertTrue(app.staticTexts["Tap count: 0"].waitForExistence(timeout: 2))
+    }
+    
+    // MARK: - About Window Tests
+    
+    func testAboutWindow() {
+        let aboutButton = app.buttons.matching(NSPredicate(format: "label CONTAINS 'About'")).firstMatch
+        
+        if aboutButton.exists {
+            aboutButton.click()
+            
+            // Check for about window elements
+            let versionText = app.staticTexts["Version 1.0"]
+            XCTAssertTrue(versionText.waitForExistence(timeout: 2), "Version text should appear")
+            
+            // Close about window
+            if app.buttons["Close"].exists {
+                app.buttons["Close"].click()
+            } else if app.buttons["OK"].exists {
+                app.buttons["OK"].click()
+            }
+        }
+    }
+    
+    // MARK: - Keyboard Shortcuts Tests
+    
+    func testKeyboardShortcuts() {
+        // Increment counter first
+        let tapButton = app.buttons["Tap me!"]
+        tapButton.click()
+        tapButton.click()
+        XCTAssertTrue(app.staticTexts["Tap count: 2"].exists)
+        
+        // Test Clear Counter shortcut (Cmd+Shift+K)
+        app.typeKey("k", modifierFlags: [.command, .shift])
+        XCTAssertTrue(app.staticTexts["Tap count: 0"].waitForExistence(timeout: 2))
+        
+        // Test System Info shortcut (Cmd+I)
+        app.typeKey("i", modifierFlags: .command)
+        let systemInfoText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'macOS'")).firstMatch
+        XCTAssertTrue(systemInfoText.waitForExistence(timeout: 2))
+    }
+    
+    // MARK: - Window Management Tests
+    
+    func testWindowResize() {
+        let window = app.windows.firstMatch
+        let originalFrame = window.frame
+        
+        // Resize window
+        let bottomRight = window.coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 1.0))
+        let newBottomRight = bottomRight.withOffset(CGVector(dx: 100, dy: 100))
+        bottomRight.press(forDuration: 0.1, thenDragTo: newBottomRight)
+        
+        // Verify window was resized
+        let newFrame = window.frame
+        XCTAssertNotEqual(originalFrame.size.width, newFrame.size.width)
+    }
+    
+    func testWindowMinimize() {
+        let window = app.windows.firstMatch
+        XCTAssertTrue(window.exists)
+        
+        // Minimize using menu
+        app.menuBarItems["Window"].click()
+        app.menuItems["Minimize"].click()
+        
+        // Window should still exist but not be visible
+        XCTAssertTrue(window.exists)
+    }
+    
+    // MARK: - Preferences Tests
+    
+    func testPreferencesWindow() {
+        // Open preferences (Cmd+,)
+        app.typeKey(",", modifierFlags: .command)
+        
+        // Check for preferences window elements
+        let preferencesWindow = app.windows.matching(NSPredicate(format: "title CONTAINS 'Settings' OR title CONTAINS 'Preferences'")).firstMatch
+        
+        if preferencesWindow.waitForExistence(timeout: 2) {
+            // Check for settings controls
+            let toggles = app.checkBoxes
+            XCTAssertTrue(toggles.count > 0, "Preferences should have toggles")
+            
+            // Close preferences
+            app.typeKey("w", modifierFlags: .command)
+        }
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testLaunchPerformance() {
+        measure(metrics: [XCTApplicationLaunchMetric()]) {
+            app.launch()
+        }
+    }
+    
+    func testRapidButtonClicks() {
+        let tapButton = app.buttons["Tap me!"]
+        
+        measure {
+            for _ in 1...20 {
+                tapButton.click()
+            }
+            app.buttons["Reset"].click()
+        }
+    }
+    
+    // MARK: - Screenshot Tests
+    
+    func testCaptureScreenshots() {
+        // Initial state
+        let screenshot1 = app.screenshot()
+        let attachment1 = XCTAttachment(screenshot: screenshot1)
+        attachment1.name = "macOS Initial State"
+        attachment1.lifetime = .keepAlways
+        add(attachment1)
+        
+        // After interaction
+        app.buttons["Tap me!"].click()
+        app.buttons["Tap me!"].click()
+        
+        let screenshot2 = app.screenshot()
+        let attachment2 = XCTAttachment(screenshot: screenshot2)
+        attachment2.name = "macOS After Tapping"
+        attachment2.lifetime = .keepAlways
+        add(attachment2)
+        
+        // With system info
+        app.buttons["Show System Info"].click()
+        sleep(1)
+        
+        let screenshot3 = app.screenshot()
+        let attachment3 = XCTAttachment(screenshot: screenshot3)
+        attachment3.name = "macOS With System Info"
+        attachment3.lifetime = .keepAlways
+        add(attachment3)
+    }
+}

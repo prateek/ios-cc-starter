@@ -1,0 +1,190 @@
+# {{PROJECT_NAME}} - Claude Code Configuration
+
+This project is configured for CLI-driven iOS/macOS development using Claude Code.
+
+## Project Configuration
+
+- **Project Name**: {{PROJECT_NAME}}
+- **Bundle ID**: {{BUNDLE_ID}}
+- **Platforms**: {{PLATFORMS}}
+- **UI Framework**: {{UI_FRAMEWORK}}
+- **iOS Min Version**: {{IOS_VERSION}}
+- **macOS Min Version**: {{MACOS_VERSION}}
+
+## Build Commands
+
+### iOS Commands
+```bash
+# Build for iOS simulator
+make build-ios
+
+# Build and run on iOS simulator
+make run-ios
+
+# Run on specific simulator
+make run-ios-sim SIMULATOR="iPhone 16"
+
+# Build for physical device
+make build-device
+
+# Install and run on connected device
+make run-device
+```
+
+### macOS Commands
+```bash
+# Build macOS app
+make build-macos
+
+# Build and run macOS app
+make run-macos
+
+# Clean macOS build
+make clean-macos
+```
+
+### Testing Commands
+```bash
+# Run all tests
+make test
+
+# Run iOS tests only
+make test-ios
+
+# Run macOS tests only
+make test-macos
+
+# Run UI tests
+make test-ui
+
+# Generate test coverage report
+make coverage
+```
+
+## MCP Tools Usage
+
+This project uses the xcode-build MCP server. Key tools:
+
+### Project Management
+- `mcp__xcode-build__discover_projs` - Find Xcode projects
+- `mcp__xcode-build__list_schems_proj` - List available schemes
+- `mcp__xcode-build__clean_proj` - Clean build artifacts
+
+### iOS Development
+- `mcp__xcode-build__list_sims` - List available simulators
+- `mcp__xcode-build__boot_sim` - Boot a simulator
+- `mcp__xcode-build__build_sim_name_proj` - Build for simulator
+- `mcp__xcode-build__install_app_sim` - Install app on simulator
+- `mcp__xcode-build__launch_app_sim` - Launch app on simulator
+- `mcp__xcode-build__screenshot` - Take simulator screenshot
+- `mcp__xcode-build__test_sim_name_proj` - Run tests on simulator
+
+### Physical Device
+- `mcp__xcode-build__list_devices` - List connected devices
+- `mcp__xcode-build__build_dev_proj` - Build for device
+- `mcp__xcode-build__install_app_device` - Install on device
+- `mcp__xcode-build__launch_app_device` - Launch on device
+
+### macOS Development
+- `mcp__xcode-build__build_mac_proj` - Build macOS app
+- `mcp__xcode-build__launch_mac_app` - Launch macOS app
+- `mcp__xcode-build__test_macos_proj` - Run macOS tests
+
+## Common Workflows
+
+### 1. Run on iOS Simulator
+```bash
+# List available simulators
+claude run mcp__xcode-build__list_sims
+
+# Build and run on iPhone 16
+make run-ios-sim SIMULATOR="iPhone 16"
+```
+
+### 2. Test on Physical Device
+```bash
+# List connected devices
+claude run mcp__xcode-build__list_devices
+
+# Build and install
+make run-device
+```
+
+### 3. Run Complete Test Suite
+```bash
+# Run all tests with coverage
+make test-all
+```
+
+### 4. Clean and Rebuild
+```bash
+# Clean all build artifacts
+make clean
+
+# Fresh build
+make build-all
+```
+
+## Project Structure
+
+```
+{{PROJECT_NAME}}/
+├── {{PROJECT_NAME}}.xcworkspace/     # Main workspace
+├── {{PROJECT_NAME}}/                  # iOS app target
+│   ├── Sources/                       # Source files
+│   ├── Resources/                     # Assets and resources
+│   └── Tests/                         # Test files
+├── {{PROJECT_NAME}}Mac/               # macOS app target (if included)
+├── Packages/                          # Swift packages
+└── DerivedData/                       # Build artifacts (git ignored)
+```
+
+## Development Guidelines
+
+1. **Code Style**: Follow Swift style guide, use SwiftLint
+2. **Testing**: Write tests for all new features
+3. **Commits**: Use conventional commit messages
+4. **Documentation**: Update inline documentation for public APIs
+
+## Troubleshooting
+
+### Simulator Issues
+```bash
+# Reset simulator
+xcrun simctl erase all
+
+# Boot specific simulator
+xcrun simctl boot "iPhone 16"
+```
+
+### Build Issues
+```bash
+# Clean derived data
+make clean-derived-data
+
+# Reset package cache
+make reset-packages
+```
+
+### Device Issues
+```bash
+# Trust device
+make trust-device
+
+# View device logs
+make device-logs
+```
+
+## CI/CD
+
+GitHub Actions workflow is configured to:
+1. Build for all configured platforms
+2. Run complete test suite
+3. Generate coverage reports
+4. Create release builds
+
+## Additional Resources
+
+- [Xcode Build MCP Documentation](https://github.com/mcp/xcode-build)
+- [Swift Documentation](https://docs.swift.org)
+- [Apple Developer Documentation](https://developer.apple.com/documentation/)
