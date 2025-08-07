@@ -18,7 +18,9 @@ UI_FRAMEWORK=$(jq -r '.uiFramework' project.config.json)
 IOS_VERSION=$(jq -r '.iosConfig.minVersion' project.config.json)
 MACOS_VERSION=$(jq -r '.macosConfig.minVersion' project.config.json)
 
-OUTPUT_DIR="output/${PROJECT_NAME}"
+# Accept optional output base directory, default to "output"
+OUTPUT_BASE_DIR="${1:-output}"
+OUTPUT_DIR="${OUTPUT_BASE_DIR}/${PROJECT_NAME}"
 mkdir -p "$OUTPUT_DIR/.claude"
 
 # Generate CLAUDE.md from template

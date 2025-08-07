@@ -172,6 +172,20 @@ generate-project: ## Generate project from configuration
 	@echo "Generating project from configuration..."
 	@./scripts/generate_project.sh
 
+.PHONY: generate-project-to
+generate-project-to: ## Generate project to specific directory (use OUTPUT_DIR=path)
+	@echo "Generating project to $(OUTPUT_DIR)..."
+	@./scripts/generate_project.sh "$(OUTPUT_DIR)"
+
+# Template Tests
+.PHONY: test-generator
+test-generator: ## Test the project generator
+	@echo "Running generator tests..."
+	@./tests/test_generator.sh
+
+.PHONY: test-template
+test-template: test-generator ## Alias for test-generator
+
 # Utility Commands
 .PHONY: schemes
 schemes: ## List available schemes

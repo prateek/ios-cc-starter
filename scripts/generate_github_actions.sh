@@ -15,11 +15,13 @@ PROJECT_NAME=$(jq -r '.projectName' project.config.json)
 PLATFORMS=$(jq -r '.platforms[]' project.config.json)
 INCLUDE_TESTS=$(jq -r '.includeTests' project.config.json)
 
-OUTPUT_DIR="output/${PROJECT_NAME}"
+# Accept optional output base directory, default to "output"
+OUTPUT_BASE_DIR="${1:-output}"
+OUTPUT_DIR="${OUTPUT_BASE_DIR}/${PROJECT_NAME}"
 mkdir -p "$OUTPUT_DIR/.github/workflows"
 
 # Generate workflow from template
 sed -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" \
-    .github/workflows/test.yml.template > "$OUTPUT_DIR/.github/workflows/test.yml"
+    templates/test.yml.template > "$OUTPUT_DIR/.github/workflows/test.yml"
 
 echo "Generated GitHub Actions workflow for $PROJECT_NAME"

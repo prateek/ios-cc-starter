@@ -20,7 +20,9 @@ IOS_VERSION=$(jq -r '.iosConfig.minVersion' project.config.json)
 IOS_DEVICE_FAMILY=$(jq -r '.iosConfig.deviceFamily' project.config.json)
 MACOS_VERSION=$(jq -r '.macosConfig.minVersion' project.config.json)
 
-OUTPUT_DIR="output/${PROJECT_NAME}"
+# Accept optional output base directory, default to "output"
+OUTPUT_BASE_DIR="${1:-output}"
+OUTPUT_DIR="${OUTPUT_BASE_DIR}/${PROJECT_NAME}"
 
 echo "Generating project: $PROJECT_NAME"
 echo "Output directory: $OUTPUT_DIR"
@@ -130,12 +132,12 @@ done
 
 # Generate CLAUDE.md
 echo "Generating CLAUDE.md..."
-./scripts/generate_claude_md.sh
+./scripts/generate_claude_md.sh "$OUTPUT_BASE_DIR"
 
 # Generate GitHub Actions workflow if enabled
 if [ "$(jq -r '.includeCI' project.config.json)" = "true" ]; then
     echo "Generating GitHub Actions workflow..."
-    ./scripts/generate_github_actions.sh
+    ./scripts/generate_github_actions.sh "$OUTPUT_BASE_DIR"
 fi
 
 # Copy Makefile
@@ -143,8 +145,25 @@ echo "Copying Makefile..."
 sed -e "s/PROJECT_NAME ?= MyApp/PROJECT_NAME ?= $PROJECT_NAME/g" \
     Makefile > "$OUTPUT_DIR/Makefile"
 
-# Copy .gitignore
-cp .gitignore "$OUTPUT_DIR/"
+# Copy .gitignore from template
+echo "Copying .gitignore..."
+if [ -f "templates/.gitignore.template" ]; then
+    sed -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" \
+        templates/.gitignore.template > "$OUTPUT_DIR/.gitignore"
+else
+    # Fallback to root .gitignore if template doesn't exist
+    cp .gitignore "$OUTPUT_DIR/"
+fi
+
+# Copy all .claude files
+echo "Copying .claude configuration files..."
+if [ -d ".claude" ]; then
+    mkdir -p "$OUTPUT_DIR/.claude"
+    # Copy settings.local.json if it exists
+    if [ -f ".claude/settings.local.json" ]; then
+        cp ".claude/settings.local.json" "$OUTPUT_DIR/.claude/"
+    fi
+fi
 
 # Create README for the generated project
 cat > "$OUTPUT_DIR/README.md" << EOF

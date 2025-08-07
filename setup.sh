@@ -27,7 +27,7 @@ NC='\033[0m' # No Color
 # Default values
 DEFAULT_PROJECT_NAME="MyApp"
 DEFAULT_BUNDLE_ID="com.example.myapp"
-DEFAULT_IOS_VERSION="18.4"
+DEFAULT_IOS_VERSION="18.6"
 DEFAULT_MACOS_VERSION="15.4"
 
 # Function to print colored output
@@ -40,7 +40,7 @@ prompt_with_default() {
     local prompt="$1"
     local default="$2"
     local response
-    
+
     read -p "$prompt [$default]: " response
     echo "${response:-$default}"
 }
@@ -50,7 +50,7 @@ prompt_yes_no() {
     local prompt="$1"
     local default="${2:-n}"
     local response
-    
+
     if [ "$default" = "y" ]; then
         read -p "$prompt [Y/n]: " response
         response="${response:-y}"
@@ -58,7 +58,7 @@ prompt_yes_no() {
         read -p "$prompt [y/N]: " response
         response="${response:-n}"
     fi
-    
+
     [[ "$response" =~ ^[Yy]$ ]]
 }
 
@@ -67,12 +67,12 @@ select_option() {
     local prompt="$1"
     shift
     local options=("$@")
-    
+
     echo "$prompt"
     for i in "${!options[@]}"; do
         echo "  $((i+1))) ${options[$i]}"
     done
-    
+
     local choice
     while true; do
         read -p "Enter choice [1-${#options[@]}]: " choice
@@ -107,12 +107,12 @@ PLATFORMS=()
 
 if prompt_yes_no "Include iOS" "y"; then
     PLATFORMS+=("ios")
-    
+
     # iOS specific configuration
     echo ""
     print_color "iOS Configuration:" "$BLUE"
     IOS_VERSION=$(select_option "Select minimum iOS version:" "16.0" "17.0" "18.0" "18.3" "18.4" "18.6")
-    
+
     IOS_DEVICES=$(select_option "Select device family:" "iPhone only" "iPad only" "Universal (iPhone + iPad)")
     case "$IOS_DEVICES" in
         "iPhone only")
@@ -129,7 +129,7 @@ fi
 
 if prompt_yes_no "Include macOS" "y"; then
     PLATFORMS+=("macos")
-    
+
     # macOS specific configuration
     echo ""
     print_color "macOS Configuration:" "$BLUE"
@@ -222,7 +222,7 @@ mkdir -p "$OUTPUT_DIR"
 # Generate projects based on platforms
 for platform in "${PLATFORMS[@]}"; do
     print_color "Generating $platform project..." "$GREEN"
-    
+
     case "$platform" in
         "ios")
             # Use the scaffold tool to create iOS project
