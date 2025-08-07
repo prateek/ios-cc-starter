@@ -148,8 +148,11 @@ install-device: ## Install app on connected device
 .PHONY: clean
 clean: ## Clean all build artifacts
 	@echo "Cleaning build artifacts..."
-	@claude run mcp__xcode-build__clean_proj \
-		--projectPath "$(PROJECT_PATH)"
+	@if [ -d "$(PROJECT_PATH)" ]; then \
+		xcodebuild clean -project "$(PROJECT_PATH)" -scheme "$(SCHEME)" -configuration "$(CONFIGURATION)"; \
+	else \
+		echo "Project not found at $(PROJECT_PATH)"; \
+	fi
 
 .PHONY: clean-derived-data
 clean-derived-data: ## Remove DerivedData folder
