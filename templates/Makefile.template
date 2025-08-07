@@ -15,7 +15,7 @@ SIMULATOR_NAME ?= iPhone 16
 SIMULATOR_UUID ?= 
 DEVICE_UUID ?= 
 CONFIGURATION ?= Debug
-LOG_DIR ?= logs
+LOG_DIR ?= build_logs
 VERBOSE ?= 0
 
 # Paths

@@ -30,7 +30,9 @@
       "mcp__xcode-build__build_run_mac_ws",
       "mcp__xcode-build__test_sim_id_ws",
       "mcp__xcode-build__test_macos_ws",
-      "Bash(./tests/test_generator.sh:*)"
+      "Bash(./tests/test_generator.sh:*)",
+      "Bash(./setup.sh:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   },
