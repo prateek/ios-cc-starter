@@ -15,7 +15,10 @@
       "mcp__xcode-build__build_sim_name_ws",
       "Bash(grep:*)",
       "mcp__xcode-build__build_sim_id_ws",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(xcrun simctl runtime:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   },

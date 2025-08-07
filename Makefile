@@ -20,14 +20,24 @@ CONFIGURATION ?= Debug
 PROJECT_PATH = output/$(PROJECT_NAME)/$(PROJECT_NAME).xcodeproj
 WORKSPACE_PATH = output/$(PROJECT_NAME)/$(PROJECT_NAME).xcworkspace
 
+# Detect if workspace exists
+USE_WORKSPACE := $(shell test -d $(WORKSPACE_PATH) && echo 1 || echo 0)
+
 # iOS Build Commands
 .PHONY: build-ios
 build-ios: ## Build iOS app for simulator
 	@echo "Building iOS app for simulator..."
+ifeq ($(USE_WORKSPACE),1)
+	@claude run mcp__xcode-build__build_sim_name_ws \
+		--workspacePath "$(WORKSPACE_PATH)" \
+		--scheme "$(SCHEME)" \
+		--simulatorName "$(SIMULATOR_NAME)"
+else
 	@claude run mcp__xcode-build__build_sim_name_proj \
 		--projectPath "$(PROJECT_PATH)" \
 		--scheme "$(SCHEME)" \
 		--simulatorName "$(SIMULATOR_NAME)"
+endif
 
 .PHONY: build-ios-device
 build-ios-device: ## Build iOS app for physical device
@@ -39,10 +49,17 @@ build-ios-device: ## Build iOS app for physical device
 .PHONY: run-ios
 run-ios: ## Build and run on iOS simulator
 	@echo "Running iOS app on simulator..."
+ifeq ($(USE_WORKSPACE),1)
+	@claude run mcp__xcode-build__build_run_sim_name_ws \
+		--workspacePath "$(WORKSPACE_PATH)" \
+		--scheme "$(SCHEME)" \
+		--simulatorName "$(SIMULATOR_NAME)"
+else
 	@claude run mcp__xcode-build__build_run_sim_name_proj \
 		--projectPath "$(PROJECT_PATH)" \
 		--scheme "$(SCHEME)" \
 		--simulatorName "$(SIMULATOR_NAME)"
+endif
 
 .PHONY: run-ios-device
 run-ios-device: ## Build and run on connected iOS device
@@ -72,10 +89,17 @@ test: test-ios test-macos ## Run all tests
 .PHONY: test-ios
 test-ios: ## Run iOS tests
 	@echo "Running iOS tests..."
+ifeq ($(USE_WORKSPACE),1)
+	@claude run mcp__xcode-build__test_sim_name_ws \
+		--workspacePath "$(WORKSPACE_PATH)" \
+		--scheme "$(SCHEME)" \
+		--simulatorName "$(SIMULATOR_NAME)"
+else
 	@claude run mcp__xcode-build__test_sim_name_proj \
 		--projectPath "$(PROJECT_PATH)" \
 		--scheme "$(SCHEME)" \
 		--simulatorName "$(SIMULATOR_NAME)"
+endif
 
 .PHONY: test-macos
 test-macos: ## Run macOS tests
@@ -190,6 +214,14 @@ archive: ## Create release archive
 		-archivePath "build/$(PROJECT_NAME).xcarchive"
 
 # Development Helpers
+.PHONY: check-deps
+check-deps: ## Check required dependencies
+	@echo "Checking dependencies..."
+	@which claude >/dev/null 2>&1 || (echo "❌ Claude CLI not found. Install from https://claude.ai/code" && exit 1)
+	@which xcodebuild >/dev/null 2>&1 || (echo "❌ Xcode not found. Install from App Store" && exit 1)
+	@which jq >/dev/null 2>&1 || (echo "⚠️  jq not found. Install with: brew install jq")
+	@echo "✅ All required dependencies found"
+
 .PHONY: format
 format: ## Format Swift code
 	@echo "Formatting code..."
@@ -217,6 +249,15 @@ mac: run-macos ## Alias for run-macos
 
 .PHONY: macos
 macos: run-macos ## Alias for run-macos
+
+# Open in Xcode (fallback option)
+.PHONY: open-xcode
+open-xcode: ## Open project in Xcode
+ifeq ($(USE_WORKSPACE),1)
+	@open "$(WORKSPACE_PATH)"
+else
+	@open "$(PROJECT_PATH)"
+endif
 
 # Default target
 .DEFAULT_GOAL := help

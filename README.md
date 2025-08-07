@@ -13,6 +13,9 @@ cd ios-cc-starter
 # Navigate to your project
 cd output/YourProjectName
 
+# Check dependencies first
+make check-deps
+
 # Run your app
 make ios   # iOS simulator
 make mac   # macOS
@@ -38,18 +41,21 @@ make test  # Run all tests
 ### Key Commands
 ```bash
 make help          # Show all commands
+make check-deps    # Verify dependencies
 make ios          # Run iOS simulator
 make mac          # Run macOS app
 make test         # Run all tests
 make list-sims    # List simulators
 make clean        # Clean build
+make open-xcode    # Open in Xcode (if needed)
 ```
 
 ## Requirements
 
-- macOS 13.0+, Xcode 15.0+, Node.js 18+
+- macOS 13.0+, Xcode 15.0+
 - Claude Code CLI (with xcode-build MCP server)
-- Note: Xcode simulators must match deployment target version
+- jq for JSON processing (install: `brew install jq`)
+- Note: iOS simulators must match or exceed deployment target version
 
 ## Setup Options
 

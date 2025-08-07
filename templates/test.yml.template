@@ -1,0 +1,127 @@
+# ABOUTME: GitHub Actions workflow for testing {{PROJECT_NAME}} on CI
+# ABOUTME: Runs tests on iOS simulator and macOS for pull requests and main branch
+
+name: Test {{PROJECT_NAME}}
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  XCODE_VERSION: '16.0'
+  IOS_SIMULATOR: 'iPhone 16'
+  MACOS_DESTINATION: 'platform=macOS'
+
+jobs:
+  test-ios:
+    name: Test iOS
+    runs-on: macos-latest
+    if: contains('{{PLATFORMS}}', 'iOS')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+    - name: Show Available Simulators
+      run: xcrun simctl list devices
+      
+    - name: Build for iOS Simulator
+      run: |
+        xcodebuild build \
+          -workspace {{PROJECT_NAME}}.xcworkspace \
+          -scheme {{PROJECT_NAME}} \
+          -destination "platform=iOS Simulator,name=${{ env.IOS_SIMULATOR }}" \
+          -configuration Debug \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Run iOS Tests
+      run: |
+        xcodebuild test \
+          -workspace {{PROJECT_NAME}}.xcworkspace \
+          -scheme {{PROJECT_NAME}} \
+          -destination "platform=iOS Simulator,name=${{ env.IOS_SIMULATOR }}" \
+          -configuration Debug \
+          -resultBundlePath TestResults.xcresult \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Upload Test Results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-test-results
+        path: TestResults.xcresult
+
+  test-macos:
+    name: Test macOS
+    runs-on: macos-latest
+    if: contains('{{PLATFORMS}}', 'macOS')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+    - name: Build for macOS
+      run: |
+        xcodebuild build \
+          -workspace {{PROJECT_NAME}}.xcworkspace \
+          -scheme {{PROJECT_NAME}} \
+          -destination "${{ env.MACOS_DESTINATION }}" \
+          -configuration Debug
+          
+    - name: Run macOS Tests
+      run: |
+        xcodebuild test \
+          -workspace {{PROJECT_NAME}}.xcworkspace \
+          -scheme {{PROJECT_NAME}} \
+          -destination "${{ env.MACOS_DESTINATION }}" \
+          -configuration Debug \
+          -resultBundlePath TestResults.xcresult
+          
+    - name: Upload Test Results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-test-results
+        path: TestResults.xcresult
+
+  test-swift-package:
+    name: Test Swift Package
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+      
+    - name: Build Package
+      run: |
+        cd {{PROJECT_NAME}}Package
+        swift build
+        
+    - name: Run Package Tests
+      run: |
+        cd {{PROJECT_NAME}}Package
+        swift test --enable-code-coverage
+        
+    - name: Generate Coverage Report
+      run: |
+        cd {{PROJECT_NAME}}Package
+        xcrun llvm-cov export \
+          .build/debug/{{PROJECT_NAME}}PackagePackageTests.xctest/Contents/MacOS/{{PROJECT_NAME}}PackagePackageTests \
+          -instr-profile .build/debug/codecov/default.profdata \
+          -format="lcov" > coverage.lcov
+          
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: {{PROJECT_NAME}}Package/coverage.lcov
+        flags: swift-package
+        name: swift-package-coverage

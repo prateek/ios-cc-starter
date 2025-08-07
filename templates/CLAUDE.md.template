@@ -1,0 +1,116 @@
+# ABOUTME: Project-specific instructions for Claude Code to assist with {{PROJECT_NAME}}
+# ABOUTME: Contains architecture guidelines, testing requirements, and development patterns
+
+# {{PROJECT_NAME}} Development Guidelines
+
+## Project Overview
+This is a {{PLATFORMS}} application built using SwiftUI and the MCP xcode-build tools.
+The project uses CLI-driven development without Xcode UI.
+
+## Architecture
+- **UI Framework**: {{UI_FRAMEWORK}}
+- **Target Platforms**: {{PLATFORMS}}
+- **iOS Deployment Target**: {{IOS_VERSION}}
+- **macOS Deployment Target**: {{MACOS_VERSION}}
+- **Bundle Identifier**: {{BUNDLE_ID}}
+
+## Key Commands
+```bash
+# Building
+make ios          # Build and run iOS simulator
+make mac          # Build and run macOS app
+make device       # Build for physical iOS device
+make clean        # Clean build artifacts
+
+# Testing
+make test         # Run all tests
+make test-ios     # Run iOS tests only
+make test-mac     # Run macOS tests only
+
+# Utilities
+make list-sims    # List available simulators
+make list-devices # List connected devices
+```
+
+## Testing Requirements
+- ALL new features MUST have unit tests
+- UI components MUST have UI tests with accessibility identifiers
+- Test coverage target: 80% minimum
+- Run tests before committing: `make test`
+
+## Code Style Guidelines
+- Use SwiftUI for all new UI components
+- Follow Swift API Design Guidelines
+- Use async/await for asynchronous code
+- Prefer value types (structs) over reference types (classes)
+- All public APIs must have documentation comments
+
+## Project Structure
+```
+{{PROJECT_NAME}}/
+├── {{PROJECT_NAME}}.xcworkspace     # Main workspace
+├── {{PROJECT_NAME}}.xcodeproj       # Project file
+├── {{PROJECT_NAME}}/                # Main app target
+│   ├── {{PROJECT_NAME}}App.swift    # App entry point
+│   ├── ContentView.swift            # Main view
+│   └── Assets.xcassets              # Resources
+├── {{PROJECT_NAME}}Package/         # Swift Package for features
+│   ├── Sources/
+│   └── Tests/
+└── {{PROJECT_NAME}}UITests/         # UI test target
+```
+
+## MCP Tools Usage
+When working with this project, use these MCP tools:
+- `mcp__xcode-build__build_sim_name_ws` - Build for simulator
+- `mcp__xcode-build__test_sim_name_ws` - Run tests
+- `mcp__xcode-build__list_sims` - List simulators
+- `mcp__xcode-build__launch_app_sim` - Launch app
+
+## Common Tasks
+
+### Adding a New Feature
+1. Create feature branch: `git checkout -b feature/feature-name`
+2. Add code in `{{PROJECT_NAME}}Package/Sources/`
+3. Add tests in `{{PROJECT_NAME}}Package/Tests/`
+4. Run tests: `make test`
+5. Commit with descriptive message
+
+### Debugging
+- Use `print()` statements for console output
+- Check simulator logs with MCP tools
+- Use Xcode's debug gauges via `make open-xcode` if needed
+
+### Performance
+- Profile with Instruments when needed
+- Keep view hierarchies shallow
+- Use `@StateObject` and `@ObservedObject` appropriately
+- Lazy load heavy resources
+
+## Important Notes
+- NEVER commit secrets or API keys
+- Always test on both iOS and macOS if supporting both
+- Keep dependencies minimal - prefer native frameworks
+- Document complex logic with inline comments
+
+## CI/CD
+GitHub Actions runs tests on:
+- Every push to main/develop branches
+- All pull requests
+- Workflow can be triggered manually
+
+## Device Testing
+For physical device testing:
+1. Connect device via USB
+2. Run `make list-devices` to get device ID
+3. Use device-specific build commands in Makefile
+
+## Troubleshooting
+- If simulator won't launch: `make clean && make ios`
+- For build errors: Check iOS/macOS deployment targets match available SDKs
+- Missing dependencies: Ensure Xcode Command Line Tools are installed
+- MCP errors: Verify xcode-build server is running
+
+## Contact
+Project maintained by: {{DEVELOPER_NAME}}
+Bundle ID: {{BUNDLE_ID}}

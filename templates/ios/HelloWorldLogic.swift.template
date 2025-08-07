@@ -2,29 +2,40 @@
 // ABOUTME: Provides testable counter operations and app info
 
 import Foundation
+#if os(iOS)
+import UIKit
+#endif
 
-public class HelloWorldLogic {
-    private(set) var counter: Int = 0
+@MainActor
+public class HelloWorldLogic: ObservableObject {
+    @Published private(set) var counter: Int = 0
     private let maxCount = 999
+    private let queue = DispatchQueue(label: "com.{{BUNDLE_ID}}.logic", attributes: .concurrent)
     
     public init() {}
     
     public func increment() -> Int {
-        if counter < maxCount {
-            counter += 1
+        queue.sync(flags: .barrier) {
+            if counter < maxCount {
+                counter += 1
+            }
         }
         return counter
     }
     
     public func decrement() -> Int {
-        if counter > 0 {
-            counter -= 1
+        queue.sync(flags: .barrier) {
+            if counter > 0 {
+                counter -= 1
+            }
         }
         return counter
     }
     
     public func reset() {
-        counter = 0
+        queue.sync(flags: .barrier) {
+            counter = 0
+        }
     }
     
     public func getGreeting(for platform: String) -> String {
