@@ -7,7 +7,7 @@
   "includeTests": true,
   "includeCI": true,
   "iosConfig": {
-    "minVersion": "18.0",
+    "minVersion": "18.6",
     "deviceFamily": "universal"
   },
   "macosConfig": {

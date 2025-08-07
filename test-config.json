@@ -5,9 +5,9 @@
   "platforms": ["ios", "macos"],
   "uiFramework": "SwiftUI",
   "includeTests": true,
-  "includeCI": false,
+  "includeCI": true,
   "iosConfig": {
-    "minVersion": "17.0",
+    "minVersion": "18.6",
     "deviceFamily": "universal"
   },
   "macosConfig": {
