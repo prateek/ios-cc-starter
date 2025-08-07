@@ -4,6 +4,7 @@ CLI-driven iOS/macOS development template for Claude Code - no Xcode UI required
 
 ## Quick Start
 
+### Interactive Setup
 ```bash
 # Clone and setup
 git clone https://github.com/prateek/ios-cc-starter
@@ -11,6 +12,20 @@ cd ios-cc-starter
 ./setup.sh
 
 # Navigate to your project
+cd output/YourProjectName
+```
+
+### Non-Interactive Setup
+```bash
+# Use a config file for automated setup
+./setup.sh --config sample.config.json
+
+# Or create your own config (see sample.config.json)
+./setup.sh --config my-project.config.json
+```
+
+### Running Your App
+```bash
 cd output/YourProjectName
 
 # Check dependencies first
@@ -61,10 +76,49 @@ make open-xcode    # Open in Xcode (if needed)
 
 The wizard configures:
 - **Platforms**: iOS, macOS, watchOS, tvOS, visionOS
-- **iOS versions**: 16.0, 17.0, 18.0, 18.4
+- **iOS versions**: 16.0, 17.0, 18.0, 18.3, 18.4, 18.6
 - **macOS versions**: 13.0, 14.0, 15.0, 15.4
 - **UI Framework**: SwiftUI, UIKit, or both
 - **Device targets**: iPhone, iPad, Universal
+
+## Using with Claude Code
+
+When using this template with Claude Code:
+
+1. **Project Generation**: Claude Code will automatically execute the MCP scaffold commands when running `generate_project.sh`
+2. **Building & Running**: Use the MCP xcode-build tools directly or via make commands
+3. **Non-Interactive Setup**: Use `./setup.sh --config sample.config.json` for automated setup
+
+### Example Claude Code Commands
+```bash
+# After setup, Claude can directly use:
+mcp__xcode-build__build_sim_name_ws
+mcp__xcode-build__build_mac_ws
+mcp__xcode-build__test_sim_name_ws
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue: iOS version mismatch**
+- Solution: Ensure your Xcode simulators match the iOS version selected during setup
+- Check available simulators: `make list-sims` or `xcrun simctl list`
+
+**Issue: `claude run` command not found**
+- Solution: This is expected when running outside Claude Code. The generate_project.sh script will output MCP commands for Claude Code to execute
+
+**Issue: Build fails with "scheme not found"**
+- Solution: Run `make schemes` to list available schemes
+- Ensure the project was properly scaffolded with MCP tools
+
+**Issue: Simulator doesn't boot**
+- Solution: Check simulator availability with `make list-sims`
+- Try resetting simulators: `make reset-simulators`
+
+**Issue: Dependencies missing**
+- Solution: Run `make check-deps` to verify all required tools are installed
+- Install missing dependencies (e.g., `brew install jq`)
 
 ## Contributing
 

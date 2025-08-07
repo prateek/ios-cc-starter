@@ -1,0 +1,16 @@
+{
+  "projectName": "MyApp",
+  "bundleId": "com.example.myapp",
+  "displayName": "My App",
+  "platforms": ["ios", "macos"],
+  "uiFramework": "swiftui",
+  "includeTests": true,
+  "includeCI": true,
+  "iosConfig": {
+    "minVersion": "18.0",
+    "deviceFamily": "universal"
+  },
+  "macosConfig": {
+    "minVersion": "15.0"
+  }
+}

@@ -46,29 +46,29 @@ if echo "$PLATFORMS" | grep -q "ios"; then
             ;;
     esac
     
-    # Use MCP tool to scaffold iOS project
-    claude run mcp__xcode-build__scaffold_ios_project \
-        --projectName "$PROJECT_NAME" \
-        --outputPath "$OUTPUT_DIR" \
-        --bundleIdentifier "$BUNDLE_ID" \
-        --displayName "$DISPLAY_NAME" \
-        --deploymentTarget "$IOS_VERSION" \
-        --targetedDeviceFamily "$DEVICE_FAMILIES" \
-        --customizeNames true
+    # Note: When running from Claude Code, it will execute the MCP command directly
+    echo "Note: Claude Code should execute the following MCP command:"
+    echo "mcp__xcode-build__scaffold_ios_project with parameters:"
+    echo "  projectName: $PROJECT_NAME"
+    echo "  outputPath: $OUTPUT_DIR"
+    echo "  bundleIdentifier: $BUNDLE_ID"
+    echo "  displayName: $DISPLAY_NAME"
+    echo "  deploymentTarget: $IOS_VERSION"
+    echo "  targetedDeviceFamily: $DEVICE_FAMILIES"
 fi
 
 # Generate macOS project if selected
 if echo "$PLATFORMS" | grep -q "macos"; then
     echo "Generating macOS project..."
     
-    # Use MCP tool to scaffold macOS project
-    claude run mcp__xcode-build__scaffold_macos_project \
-        --projectName "${PROJECT_NAME}Mac" \
-        --outputPath "$OUTPUT_DIR" \
-        --bundleIdentifier "${BUNDLE_ID}.mac" \
-        --displayName "$DISPLAY_NAME" \
-        --deploymentTarget "$MACOS_VERSION" \
-        --customizeNames true
+    # Note: When running from Claude Code, it will execute the MCP command directly
+    echo "Note: Claude Code should execute the following MCP command:"
+    echo "mcp__xcode-build__scaffold_macos_project with parameters:"
+    echo "  projectName: ${PROJECT_NAME}Mac"
+    echo "  outputPath: $OUTPUT_DIR"
+    echo "  bundleIdentifier: ${BUNDLE_ID}.mac"
+    echo "  displayName: $DISPLAY_NAME"
+    echo "  deploymentTarget: $MACOS_VERSION"
 fi
 
 # Copy and process templates

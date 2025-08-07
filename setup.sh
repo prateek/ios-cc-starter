@@ -4,6 +4,19 @@
 
 set -e
 
+# Check for --config flag
+if [ "$1" = "--config" ] && [ -n "$2" ]; then
+    CONFIG_FILE="$2"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Error: Config file '$CONFIG_FILE' not found"
+        exit 1
+    fi
+    echo "Using config file: $CONFIG_FILE"
+    cp "$CONFIG_FILE" project.config.json
+    ./scripts/generate_project.sh
+    exit 0
+fi
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -98,7 +111,7 @@ if prompt_yes_no "Include iOS" "y"; then
     # iOS specific configuration
     echo ""
     print_color "iOS Configuration:" "$BLUE"
-    IOS_VERSION=$(select_option "Select minimum iOS version:" "16.0" "17.0" "18.0" "18.4")
+    IOS_VERSION=$(select_option "Select minimum iOS version:" "16.0" "17.0" "18.0" "18.3" "18.4" "18.6")
     
     IOS_DEVICES=$(select_option "Select device family:" "iPhone only" "iPad only" "Universal (iPhone + iPad)")
     case "$IOS_DEVICES" in
