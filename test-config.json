@@ -2,15 +2,15 @@
   "projectName": "TestApp",
   "bundleId": "com.example.testapp",
   "displayName": "Test App",
-  "platforms": ["ios"],
-  "uiFramework": "swiftui",
+  "platforms": ["ios", "macos"],
+  "uiFramework": "SwiftUI",
   "includeTests": true,
   "includeCI": false,
   "iosConfig": {
-    "minVersion": "18.4",
+    "minVersion": "17.0",
     "deviceFamily": "universal"
   },
   "macosConfig": {
-    "minVersion": "15.4"
+    "minVersion": "14.0"
   }
 }

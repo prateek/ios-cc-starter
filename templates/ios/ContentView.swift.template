@@ -2,24 +2,13 @@
 // ABOUTME: Displays Hello World with interactive counter
 
 import SwiftUI
-#if os(iOS)
-import UIKit
-#endif
 
 struct ContentView: View {
     @State private var tapCount = 0
     @State private var showingAlert = false
     
     private var deviceType: String {
-        #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            return "iPad"
-        } else {
-            return "iPhone"
-        }
-        #else
-        return "Mac"
-        #endif
+        "{{DEVICE_TYPE}}"
     }
     
     var body: some View {

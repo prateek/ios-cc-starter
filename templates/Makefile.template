@@ -1,0 +1,359 @@
+# ABOUTME: Makefile for iOS/macOS Claude Code development
+# ABOUTME: Provides convenient commands for building, testing, and running apps
+
+.PHONY: help
+help: ## Show this help message
+	@echo "{{PROJECT_NAME}} - Available Commands"
+	@echo "=================================================="
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+# Configuration
+PROJECT_NAME ?= {{PROJECT_NAME}}
+SCHEME ?= $(PROJECT_NAME)
+SIMULATOR_NAME ?= iPhone 16
+SIMULATOR_UUID ?= 
+DEVICE_UUID ?= 
+CONFIGURATION ?= Debug
+LOG_DIR ?= logs
+VERBOSE ?= 0
+
+# Paths
+PROJECT_PATH = $(PROJECT_NAME).xcodeproj
+WORKSPACE_PATH = $(PROJECT_NAME).xcworkspace
+PROJECT_PATH_MAC = $(PROJECT_NAME)Mac.xcodeproj
+WORKSPACE_PATH_MAC = $(PROJECT_NAME)Mac.xcworkspace
+
+# Detect if workspace exists
+USE_WORKSPACE := $(shell test -d $(WORKSPACE_PATH) && echo 1 || echo 0)
+USE_WORKSPACE_MAC := $(shell test -d $(WORKSPACE_PATH_MAC) && echo 1 || echo 0)
+
+# Logging configuration
+ifeq ($(VERBOSE),1)
+    XCODE_FLAGS = 
+    LOG_SUFFIX = 2>&1 | tee -a $(LOG_DIR)/build.log
+else
+    XCODE_FLAGS = -quiet
+    LOG_SUFFIX = >> $(LOG_DIR)/build.log 2>&1
+endif
+
+# Create log directory
+$(LOG_DIR):
+	@mkdir -p $(LOG_DIR)
+
+# iOS Build Commands
+.PHONY: build-ios
+build-ios: $(LOG_DIR) ## Build iOS app for simulator
+	@echo "Building iOS app for simulator..."
+	@echo "[$(shell date)] Starting iOS build for simulator" >> $(LOG_DIR)/build.log
+ifeq ($(USE_WORKSPACE),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "platform=iOS Simulator,name=$(SIMULATOR_NAME)" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+else
+	@xcodebuild -project "$(PROJECT_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "platform=iOS Simulator,name=$(SIMULATOR_NAME)" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+endif
+	@echo "✅ Build complete. Check $(LOG_DIR)/build.log for details"
+
+.PHONY: build-ios-device
+build-ios-device: $(LOG_DIR) ## Build iOS app for physical device
+	@echo "Building iOS app for device..."
+	@echo "[$(shell date)] Starting iOS build for device" >> $(LOG_DIR)/build.log
+	@xcodebuild -project "$(PROJECT_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "generic/platform=iOS" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+	@echo "✅ Build complete. Check $(LOG_DIR)/build.log for details"
+
+.PHONY: run-ios
+run-ios: $(LOG_DIR) ## Build and run on iOS simulator
+	@echo "Running iOS app on simulator..."
+	@echo "[$(shell date)] Starting iOS run on simulator" >> $(LOG_DIR)/run.log
+	@xcrun simctl boot "$(SIMULATOR_NAME)" 2>/dev/null || true
+ifeq ($(USE_WORKSPACE),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "platform=iOS Simulator,name=$(SIMULATOR_NAME)" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+else
+	@xcodebuild -project "$(PROJECT_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "platform=iOS Simulator,name=$(SIMULATOR_NAME)" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+endif
+	@xcrun simctl install booted "$(shell xcodebuild -workspace "$(WORKSPACE_PATH)" -scheme "$(SCHEME)" -showBuildSettings | grep -m 1 'BUILT_PRODUCTS_DIR' | awk '{print $$3}')/$(PROJECT_NAME).app" >> $(LOG_DIR)/run.log 2>&1
+	@xcrun simctl launch booted $(BUNDLE_ID) >> $(LOG_DIR)/run.log 2>&1
+	@echo "✅ App launched. Check $(LOG_DIR)/run.log for details"
+
+# macOS Build Commands
+.PHONY: build-macos
+build-macos: $(LOG_DIR) ## Build macOS app
+	@echo "Building macOS app..."
+	@echo "[$(shell date)] Starting macOS build" >> $(LOG_DIR)/build.log
+ifeq ($(USE_WORKSPACE_MAC),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH_MAC)" \
+		-scheme "$(SCHEME)Mac" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+else
+	@xcodebuild -project "$(PROJECT_PATH_MAC)" \
+		-scheme "$(SCHEME)Mac" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+endif
+	@echo "✅ Build complete. Check $(LOG_DIR)/build.log for details"
+
+.PHONY: run-macos
+run-macos: $(LOG_DIR) ## Build and run macOS app
+	@echo "Running macOS app..."
+	@echo "[$(shell date)] Starting macOS run" >> $(LOG_DIR)/run.log
+ifeq ($(USE_WORKSPACE_MAC),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH_MAC)" \
+		-scheme "$(SCHEME)Mac" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+else
+	@xcodebuild -project "$(PROJECT_PATH_MAC)" \
+		-scheme "$(SCHEME)Mac" \
+		-configuration $(CONFIGURATION) \
+		$(XCODE_FLAGS) \
+		build $(LOG_SUFFIX)
+endif
+	@open "$(shell xcodebuild -project "$(PROJECT_PATH_MAC)" -scheme "$(SCHEME)Mac" -showBuildSettings | grep -m 1 'BUILT_PRODUCTS_DIR' | awk '{print $$3}')/$(PROJECT_NAME)Mac.app" >> $(LOG_DIR)/run.log 2>&1
+	@echo "✅ App launched. Check $(LOG_DIR)/run.log for details"
+
+# Testing Commands
+.PHONY: test
+test: test-ios test-macos ## Run all tests
+
+.PHONY: test-ios
+test-ios: $(LOG_DIR) ## Run iOS tests
+	@echo "Running iOS tests..."
+	@echo "[$(shell date)] Starting iOS tests" >> $(LOG_DIR)/test.log
+ifeq ($(USE_WORKSPACE),1)
+	@xcodebuild test \
+		-workspace "$(WORKSPACE_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "platform=iOS Simulator,name=$(SIMULATOR_NAME)" \
+		$(XCODE_FLAGS) \
+		$(LOG_SUFFIX)
+else
+	@xcodebuild test \
+		-project "$(PROJECT_PATH)" \
+		-scheme "$(SCHEME)" \
+		-destination "platform=iOS Simulator,name=$(SIMULATOR_NAME)" \
+		$(XCODE_FLAGS) \
+		$(LOG_SUFFIX)
+endif
+	@echo "✅ Tests complete. Check $(LOG_DIR)/test.log for details"
+
+.PHONY: test-macos
+test-macos: $(LOG_DIR) ## Run macOS tests
+	@echo "Running macOS tests..."
+	@echo "[$(shell date)] Starting macOS tests" >> $(LOG_DIR)/test.log
+ifeq ($(USE_WORKSPACE_MAC),1)
+	@xcodebuild test \
+		-workspace "$(WORKSPACE_PATH_MAC)" \
+		-scheme "$(SCHEME)Mac" \
+		$(XCODE_FLAGS) \
+		$(LOG_SUFFIX)
+else
+	@xcodebuild test \
+		-project "$(PROJECT_PATH_MAC)" \
+		-scheme "$(SCHEME)Mac" \
+		$(XCODE_FLAGS) \
+		$(LOG_SUFFIX)
+endif
+	@echo "✅ Tests complete. Check $(LOG_DIR)/test.log for details"
+
+# Simulator Management
+.PHONY: list-sims
+list-sims: ## List available iOS simulators
+	@xcrun simctl list devices
+
+.PHONY: boot-sim
+boot-sim: ## Boot iOS simulator
+	@echo "Booting simulator..."
+	@xcrun simctl boot "$(SIMULATOR_NAME)" || echo "Simulator already booted"
+
+.PHONY: screenshot
+screenshot: ## Take simulator screenshot
+	@echo "Taking screenshot..."
+	@xcrun simctl io booted screenshot screenshot.png
+	@echo "Screenshot saved as screenshot.png"
+
+# Device Management
+.PHONY: list-devices
+list-devices: ## List connected physical devices
+	@xcrun devicectl list devices
+
+# Clean Commands
+.PHONY: clean
+clean: ## Clean all build artifacts
+	@echo "Cleaning build artifacts..."
+ifeq ($(USE_WORKSPACE),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH)" -scheme "$(SCHEME)" clean
+else
+	@xcodebuild -project "$(PROJECT_PATH)" -scheme "$(SCHEME)" clean
+endif
+ifeq ($(USE_WORKSPACE_MAC),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH_MAC)" -scheme "$(SCHEME)Mac" clean
+else
+	@xcodebuild -project "$(PROJECT_PATH_MAC)" -scheme "$(SCHEME)Mac" clean || true
+endif
+	@echo "✅ Clean complete"
+
+.PHONY: clean-derived-data
+clean-derived-data: ## Remove DerivedData folder
+	@echo "Removing DerivedData..."
+	@rm -rf ~/Library/Developer/Xcode/DerivedData
+	@rm -rf DerivedData
+	@echo "✅ DerivedData removed"
+
+.PHONY: clean-logs
+clean-logs: ## Clean log files
+	@echo "Cleaning log files..."
+	@rm -rf $(LOG_DIR)
+	@echo "✅ Logs cleaned"
+
+.PHONY: reset-simulators
+reset-simulators: ## Reset all simulators
+	@echo "Resetting simulators..."
+	@xcrun simctl erase all
+	@echo "✅ Simulators reset"
+
+# Utility Commands
+.PHONY: schemes
+schemes: ## List available schemes
+ifeq ($(USE_WORKSPACE),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH)" -list
+else
+	@xcodebuild -project "$(PROJECT_PATH)" -list
+endif
+
+.PHONY: build-settings
+build-settings: ## Show build settings
+ifeq ($(USE_WORKSPACE),1)
+	@xcodebuild -workspace "$(WORKSPACE_PATH)" -scheme "$(SCHEME)" -showBuildSettings
+else
+	@xcodebuild -project "$(PROJECT_PATH)" -scheme "$(SCHEME)" -showBuildSettings
+endif
+
+# Swift Package Manager
+.PHONY: update-packages
+update-packages: ## Update Swift packages
+	@echo "Updating packages..."
+	@cd $(PROJECT_NAME)Package && swift package update
+	@echo "✅ Packages updated"
+
+.PHONY: resolve-packages
+resolve-packages: ## Resolve Swift package dependencies
+	@echo "Resolving packages..."
+	@cd $(PROJECT_NAME)Package && swift package resolve
+	@echo "✅ Packages resolved"
+
+# CI/CD Commands
+.PHONY: ci-test
+ci-test: ## Run tests for CI
+	@echo "Running CI tests..."
+	@make test
+
+.PHONY: archive
+archive: $(LOG_DIR) ## Create release archive
+	@echo "Creating archive..."
+	@xcodebuild archive \
+		-project "$(PROJECT_PATH)" \
+		-scheme "$(SCHEME)" \
+		-archivePath "build/$(PROJECT_NAME).xcarchive" \
+		$(XCODE_FLAGS) \
+		$(LOG_SUFFIX)
+	@echo "✅ Archive created"
+
+# Development Helpers
+.PHONY: check-deps
+check-deps: ## Check required dependencies
+	@echo "Checking dependencies..."
+	@which xcodebuild >/dev/null 2>&1 || (echo "❌ Xcode not found. Install from App Store" && exit 1)
+	@which jq >/dev/null 2>&1 || (echo "⚠️  jq not found. Install with: brew install jq")
+	@echo "✅ All required dependencies found"
+
+.PHONY: format
+format: ## Format Swift code
+	@echo "Formatting code..."
+	@if command -v swiftformat >/dev/null 2>&1; then \
+		swiftformat . ; \
+		echo "✅ Code formatted" ; \
+	else \
+		echo "SwiftFormat not installed. Install with: brew install swiftformat" ; \
+	fi
+
+.PHONY: lint
+lint: ## Run SwiftLint
+	@echo "Linting code..."
+	@if command -v swiftlint >/dev/null 2>&1; then \
+		swiftlint ; \
+	else \
+		echo "SwiftLint not installed. Install with: brew install swiftlint" ; \
+	fi
+
+# Quick Commands
+.PHONY: ios
+ios: run-ios ## Alias for run-ios
+
+.PHONY: mac
+mac: run-macos ## Alias for run-macos
+
+.PHONY: macos
+macos: run-macos ## Alias for run-macos
+
+# Open in Xcode (fallback option)
+.PHONY: open-xcode
+open-xcode: ## Open project in Xcode
+ifeq ($(USE_WORKSPACE),1)
+	@open "$(WORKSPACE_PATH)"
+else
+	@open "$(PROJECT_PATH)"
+endif
+
+# Verbose/Quiet mode helpers
+.PHONY: verbose
+verbose: ## Enable verbose output
+	@$(MAKE) VERBOSE=1 $(filter-out verbose,$(MAKECMDGOALS))
+
+.PHONY: quiet  
+quiet: ## Enable quiet output (default)
+	@$(MAKE) VERBOSE=0 $(filter-out quiet,$(MAKECMDGOALS))
+
+# Prevent unknown target errors for verbose/quiet arguments
+%:
+	@:
+
+# Show logs
+.PHONY: logs
+logs: ## Show recent build/test/run logs
+	@if [ -d $(LOG_DIR) ]; then \
+		echo "=== Recent Logs ===" ; \
+		tail -n 50 $(LOG_DIR)/*.log 2>/dev/null || echo "No logs found" ; \
+	else \
+		echo "No log directory found. Run a build command first." ; \
+	fi
+
+# Default target
+.DEFAULT_GOAL := help

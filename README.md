@@ -98,6 +98,203 @@ make clean        # Clean build
 make open-xcode    # Open in Xcode (if needed)
 ```
 
+## Building Your App
+
+### iOS Build Instructions
+
+```bash
+# Build for iOS Simulator
+make build-ios
+
+# Build for physical iOS device
+make build-ios-device
+
+# Build and run on simulator
+make ios
+# or
+make run-ios
+
+# Specify a specific simulator
+make run-ios SIMULATOR_NAME="iPhone 15 Pro"
+```
+
+### macOS Build Instructions
+
+```bash
+# Build macOS app
+make build-macos
+
+# Build and run macOS app
+make mac
+# or
+make run-macos
+```
+
+### Build Configurations
+
+```bash
+# Debug build (default)
+make build-ios CONFIGURATION=Debug
+
+# Release build
+make build-ios CONFIGURATION=Release
+
+# Verbose output (show all xcodebuild output)
+make verbose build-ios
+
+# Quiet mode (minimal output, logs to file)
+make quiet build-ios
+```
+
+## Running Your App
+
+### On iOS Simulator
+
+```bash
+# Quick run with default simulator
+make ios
+
+# Boot simulator first, then run
+make boot-sim
+make run-ios
+
+# List available simulators
+make list-sims
+
+# Run on specific simulator
+make run-ios SIMULATOR_NAME="iPad Pro (12.9-inch)"
+```
+
+### On Physical iOS Device
+
+```bash
+# List connected devices
+make list-devices
+
+# Build and install on device
+make build-ios-device
+make install-device DEVICE_UUID=<your-device-id>
+
+# Launch on device
+make launch-device DEVICE_UUID=<your-device-id>
+```
+
+### On macOS
+
+```bash
+# Quick run
+make mac
+
+# Build and run with verbose output
+make verbose run-macos
+```
+
+## Testing
+
+### Running Tests
+
+```bash
+# Run all tests (iOS and macOS)
+make test
+
+# Run iOS tests only
+make test-ios
+
+# Run macOS tests only
+make test-macos
+
+# Run UI tests
+make test-ui-ios
+
+# Run tests with verbose output
+make verbose test
+```
+
+### Test-Driven Development (TDD)
+
+The generated projects support TDD workflow:
+
+1. Write failing tests first in `YourProject/Tests/`
+2. Run tests: `make test-ios`
+3. Implement features to make tests pass
+4. Refactor while keeping tests green
+
+## Logging and Debugging
+
+### Log Management
+
+All build, test, and run logs are saved to the `logs/` directory:
+
+```bash
+# View recent logs
+make logs
+
+# Clean log files
+make clean-logs
+
+# Logs are organized by type:
+logs/
+├── build.log    # Build output
+├── test.log     # Test results
+└── run.log      # Runtime logs
+```
+
+### Verbose vs Quiet Mode
+
+```bash
+# Verbose mode - see all output
+make verbose build-ios
+make verbose test
+
+# Quiet mode - minimal output, logs to file
+make quiet build-ios
+make quiet test
+
+# Set as environment variable
+export VERBOSE=1
+make build-ios
+```
+
+## Installation and Deployment
+
+### Installing on Simulator
+
+```bash
+# Build first
+make build-ios
+
+# Install on booted simulator
+xcrun simctl install booted path/to/YourApp.app
+
+# Or use the generated app path
+make install-sim
+```
+
+### Installing on Device
+
+```bash
+# Connect your device via USB
+# Enable Developer Mode on the device
+
+# List devices to get UUID
+make list-devices
+
+# Build for device
+make build-ios-device
+
+# Install on device
+make install-device DEVICE_UUID=<your-device-id>
+```
+
+### Creating Archives
+
+```bash
+# Create release archive
+make archive
+
+# Archive will be in build/YourProject.xcarchive
+```
+
 ## Requirements
 
 - macOS 13.0+, Xcode 15.0+

@@ -14,36 +14,148 @@ The project uses CLI-driven development without Xcode UI.
 - **macOS Deployment Target**: {{MACOS_VERSION}}
 - **Bundle Identifier**: {{BUNDLE_ID}}
 
-## Key Commands
+## Build and Run Instructions
+
+### Quick Commands
 ```bash
-# Building
-make ios          # Build and run iOS simulator
-make mac          # Build and run macOS app
-make device       # Build for physical iOS device
-make clean        # Clean build artifacts
+# Run the app
+make ios          # iOS simulator
+make mac          # macOS app
 
-# Testing
-make test         # Run all tests
-make test-ios     # Run iOS tests only
-make test-mac     # Run macOS tests only
-
-# Utilities
-make list-sims    # List available simulators
-make list-devices # List connected devices
+# Test the app
+make test         # All tests
 ```
 
-## Testing Requirements
-- ALL new features MUST have unit tests
+### Building
+```bash
+# iOS builds
+make build-ios               # Build for simulator
+make build-ios-device        # Build for physical device
+make build-ios CONFIGURATION=Release  # Release build
+
+# macOS builds
+make build-macos             # Build macOS app
+make build-macos CONFIGURATION=Release
+
+# Build with verbose output (see all xcodebuild output)
+make verbose build-ios
+
+# Build with quiet mode (logs to logs/build.log)
+make quiet build-ios
+```
+
+### Running
+```bash
+# iOS Simulator
+make run-ios                 # Default simulator
+make run-ios SIMULATOR_NAME="iPhone 15 Pro"  # Specific simulator
+
+# Physical Device
+make list-devices            # Get device UUID
+make build-ios-device
+make install-device DEVICE_UUID=<uuid>
+
+# macOS
+make run-macos
+```
+
+### Testing
+```bash
+# Run tests
+make test                    # All tests
+make test-ios                # iOS tests only
+make test-macos              # macOS tests only
+
+# Verbose testing
+make verbose test
+
+# Test logs are saved to logs/test.log
+```
+
+### Logging
+```bash
+# All logs are saved to logs/ directory
+make logs                    # View recent logs
+make clean-logs              # Clean log files
+
+# Log files:
+# - logs/build.log  (build output)
+# - logs/test.log   (test results)
+# - logs/run.log    (runtime logs)
+```
+
+## Test-Driven Development (TDD) Requirements
+
+### TDD Workflow - MANDATORY
+1. **Write failing test first**: Create test that defines desired behavior
+2. **Run test to confirm failure**: `make test-ios` or `make test-macos`
+3. **Write minimal code**: Just enough to make the test pass
+4. **Run test to confirm success**: Test should now pass
+5. **Refactor**: Clean up code while keeping tests green
+6. **Repeat**: For each new feature or bug fix
+
+### Testing Guidelines
+- ALL new features MUST have unit tests written FIRST
 - UI components MUST have UI tests with accessibility identifiers
 - Test coverage target: 80% minimum
 - Run tests before committing: `make test`
+- Tests must be comprehensive and cover edge cases
+- Use Swift Testing framework (@Test, #expect, #require)
+
+### Example TDD Flow
+```swift
+// 1. Write failing test first
+@Test func userCanAddItem() async throws {
+    let viewModel = ItemViewModel()
+    try await viewModel.addItem("Test Item")
+    #expect(viewModel.items.count == 1)
+    #expect(viewModel.items[0].title == "Test Item")
+}
+
+// 2. Run test - it fails (no implementation)
+// 3. Implement minimal code to pass
+// 4. Run test - it passes
+// 5. Refactor if needed
+```
 
 ## Code Style Guidelines
-- Use SwiftUI for all new UI components
+- Use SwiftUI for all new UI components (NO UIKit)
 - Follow Swift API Design Guidelines
 - Use async/await for asynchronous code
 - Prefer value types (structs) over reference types (classes)
 - All public APIs must have documentation comments
+- Use @Observable for view models (not ObservableObject)
+- Use .task modifier for async work (not Task in onAppear)
+
+## Important Notes for Claude
+
+### When Building/Running
+- ALWAYS check if build succeeds before marking task complete
+- If build fails, read the error logs and fix issues
+- Use verbose mode when debugging: `make verbose build-ios`
+- Check logs/build.log for detailed error messages
+
+### When Testing
+- ALWAYS write tests FIRST (TDD is mandatory)
+- Run tests after every change
+- If tests fail, DO NOT proceed until fixed
+- Test output MUST be pristine to pass
+
+### Quiet vs Verbose Modes
+```bash
+# Quiet mode (default) - minimal output, logs to file
+make build-ios
+make test
+
+# Verbose mode - see all xcodebuild output
+make verbose build-ios
+make verbose test
+VERBOSE=1 make build-ios  # Via environment variable
+
+# Check logs for details
+cat logs/build.log
+cat logs/test.log
+```
 
 ## Project Structure
 ```

@@ -86,9 +86,17 @@ for platform in $PLATFORMS; do
         for template in templates/ios/*.swift.template; do
             if [ -f "$template" ]; then
                 filename=$(basename "$template" .template)
+                # Determine device type based on configuration
+                if [ "$IOS_DEVICE_FAMILY" = "ipad" ]; then
+                    DEVICE_TYPE="iPad"
+                elif [ "$IOS_DEVICE_FAMILY" = "iphone" ]; then
+                    DEVICE_TYPE="iPhone"
+                else
+                    DEVICE_TYPE="iOS"
+                fi
                 sed -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" \
                     -e "s/{{BUNDLE_ID}}/$BUNDLE_ID/g" \
-                    -e "s/{{DEVICE_TYPE}}/iOS/g" \
+                    -e "s/{{DEVICE_TYPE}}/$DEVICE_TYPE/g" \
                     "$template" > "$TARGET_DIR/Sources/$filename"
             fi
         done
@@ -140,10 +148,11 @@ if [ "$(jq -r '.includeCI' project.config.json)" = "true" ]; then
     ./scripts/generate_github_actions.sh "$OUTPUT_BASE_DIR"
 fi
 
-# Copy Makefile
-echo "Copying Makefile..."
-sed -e "s/PROJECT_NAME ?= MyApp/PROJECT_NAME ?= $PROJECT_NAME/g" \
-    Makefile > "$OUTPUT_DIR/Makefile"
+# Generate Makefile from template
+echo "Generating Makefile..."
+sed -e "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" \
+    -e "s/{{BUNDLE_ID}}/$BUNDLE_ID/g" \
+    templates/Makefile.template > "$OUTPUT_DIR/Makefile"
 
 # Copy .gitignore from template
 echo "Copying .gitignore..."
